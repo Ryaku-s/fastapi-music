@@ -26,6 +26,7 @@ class ExceptionMessage(BaseModel):
 
 class ItemList(BaseModel):
     items: list
+    href: str
     next_page: str | None = None
     previous_page: str | None = None
     total: int

@@ -87,19 +87,6 @@ class TrackRelated(models.Track.get_pydantic(exclude={'artist', 'album'})):
     artist: Artist
 
 
-class AlbumOut(
-    models.Album.get_pydantic(exclude={'artist', 'genre', 'images'})
-):
-    genre: Genre
-    artist: Artist
-    tracks: list[TrackRelated]
-    images: list[ImageRelated]
-
-
-class TrackOut(TrackRelated):
-    album: AlbumRelated
-
-
 class PlaylistOut(
     models.Playlist.get_pydantic(exclude={'author', 'artists', 'tracks', 'images'})
 ):
@@ -109,12 +96,29 @@ class PlaylistOut(
     images: list[ImageRelated]
 
 
-class AlbumList(ItemList):
-    items: list[AlbumOut]
+class TrackOut(TrackRelated):
+    album: AlbumRelated
 
 
 class TrackList(ItemList):
     items: list[TrackOut]
+
+
+class TrackListRelated(ItemList):
+    items: list[TrackRelated]
+
+
+class AlbumOut(
+    models.Album.get_pydantic(exclude={'artist', 'genre', 'images', 'tracks'})
+):
+    genre: Genre
+    artist: Artist
+    tracks: TrackListRelated
+    images: list[ImageRelated]
+
+
+class AlbumList(ItemList):
+    items: list[AlbumOut]
 
 
 class PlaylistAddTrack(BaseModel):

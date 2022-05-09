@@ -1,8 +1,6 @@
 from typing import Sequence
-import fastapi
 
 from ormar import Model
-from fastapi import Request
 from starlette.datastructures import URL
 
 
@@ -10,15 +8,16 @@ def paginate(
     items: Sequence[Model],
     offset: int,
     limit: int,
-    request: Request
+    url: URL
 ):
     total = len(items)
 
-    next_page = _get_next(request.url, offset, limit, total)
-    previous_page = _get_previous(request.url, offset, limit)
+    next_page = _get_next(url, offset, limit, total)
+    previous_page = _get_previous(url, offset, limit)
 
     return {
         'items': items[offset : offset + limit],
+        'href': str(url),
         'next_page': next_page,
         'previous_page': previous_page,
         'offset': offset,
