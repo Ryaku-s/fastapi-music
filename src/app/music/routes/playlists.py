@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Path, Query, Request
+from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from starlette.datastructures import URL
 
 from src.app.base.schemas import ExceptionMessage
@@ -91,16 +91,55 @@ async def update_playlist(
     )
 
 
-@playlist_router.put('/{id}/tracks', response_model=schemas.PlaylistOut, responses={
-    200: {'description': 'A playlist'},
-    **token_responses
-})
-async def add_tracks_to_playlist(
-    schema: schemas.PlaylistAddTrack,
-    id: int = Path(..., description='ID of playlist'),
+@playlist_router.delete(
+    '/{id}',
+    status_code=204,
+    response_class=Response,
+    responses=token_responses
+)
+async def delete_playlist(
+    id: int = Path(..., gt=0, description='ID of album'),
     current_user: User = Depends(get_current_active_user)
 ):
-    playlist: Playlist = await PlaylistService.get_object_or_404(id=id)
+    playlist = await PlaylistService.get_object_or_404(id=id)
+    is_user_playlist_author(current_user, playlist)
+    await playlist.delete()
+
+
+@playlist_router.get(
+    '/{playlist_id}/tracks',
+    response_model=schemas.TrackList,
+    responses={
+        200: {'description': 'Pages of tracks'}
+    }
+)
+async def get_album_tracks(
+    request: Request,
+    playlist_id: int = Path(..., gt=0),
+    offset: int = Query(0, ge=0, le=100000),
+    limit: int = Query(15, ge=0, le=50)
+):
+    playlist = await PlaylistService.get_object_or_404(id=playlist_id)
+    return paginate(playlist.tracks, offset, limit, request.url)
+
+
+@playlist_router.put(
+    '/{playlist_id}/tracks',
+    response_model=schemas.PlaylistOut,
+    responses={
+        204: {
+            'description': 'Tracks added to playlist successfully'
+        },
+        **token_responses
+    },
+    response_class=Response
+)
+async def add_tracks_to_playlist(
+    schema: schemas.PlaylistAddTrack,
+    playlist_id: int = Path(..., description='ID of playlist'),
+    current_user: User = Depends(get_current_active_user)
+):
+    playlist: Playlist = await PlaylistService.get_object_or_404(id=playlist_id)
 
     is_user_playlist_author(current_user, playlist)
 
@@ -113,4 +152,31 @@ async def add_tracks_to_playlist(
                 await playlist.artists.add(track.artist)
                 playlist.duration_ms += track.duration_ms
             await playlist.update()
-    return playlist
+
+
+@playlist_router.delete(
+    '/{playlist_id}/tracks',
+    status_code=204,
+    response_class=Response,
+    responses=token_responses
+)
+async def remove_playlist_tracks(
+    schema: schemas.PlaylistAddTrack,
+    playlist_id: int = Path(..., gt=0, description='ID of track'),
+    current_user: User = Depends(get_current_active_user)
+):
+    playlist: Playlist = await PlaylistService.get_object_or_404(
+        id=playlist_id
+    )
+    is_user_playlist_author(current_user, playlist)
+
+    for track_id in schema.tracks:
+        exist = 0 not in (
+            await playlist.Meta.database.fetch_one(
+                f'''SELECT EXISTS(SELECT id FROM playlists_tracks
+                        WHERE track={track_id} and playlist={playlist_id})'''
+                )
+            )
+        if exist:
+            track = await TrackService.get_object_or_404(id=track_id)
+            await playlist.tracks.remove(track)

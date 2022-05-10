@@ -1,5 +1,5 @@
 from pydantic import EmailStr
-from fastapi import APIRouter, BackgroundTasks, Security
+from fastapi import APIRouter, BackgroundTasks, Response, Security
 from fastapi.security import HTTPAuthorizationCredentials
 
 from src.config import settings
@@ -78,10 +78,33 @@ async def logout_from_all_devices(
             'description': 'Bad request or user doesn\'t have enough '
                 'privileges'
         }
-    }
+    },
+    response_class=Response
 )
 async def confirm_email(schema: schemas.EmailConfirmationToken):
     await services.confirm_user_email(schema.token)
+
+
+# TODO
+# Do a resend email
+# 
+# @auth_router.post(
+#     '/email',
+#     status_code=204,
+#     responses= {
+#         204: {
+#             'description': 'Email confirmation has been sent'
+#         },
+#         403: {
+#             'model': ExceptionMessage,
+#             'description': 'Bad request or user doesn\'t have enough '
+#                 'privileges'
+#         }
+#     },
+#     response_class=Response
+# )
+# async def resend_email_confirmation():
+#     pass
 
 
 @auth_router.post(
