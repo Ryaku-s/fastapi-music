@@ -144,6 +144,16 @@ class PlaylistService(ModelService):
     model = models.Playlist
 
     @classmethod
+    async def all(cls, **kwargs) -> list[Model]:
+        return await cls.model.objects.select_related([
+            'author',
+            'artists',
+            'tracks',
+            'tracks__artist',
+            'images'
+        ]).all(**kwargs)
+
+    @classmethod
     async def get_object_or_none(cls, **kwargs) -> Model:
         return await cls.model.objects.select_related([
             'author',
