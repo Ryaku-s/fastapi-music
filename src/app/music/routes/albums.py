@@ -22,19 +22,7 @@ async def get_albums(
     offset: int = Query(0, ge=0, le=100000),
     limit: int = Query(15, ge=0, le=50)
 ):
-    albums = await services.AlbumService.all()
-    for i, album in enumerate(albums):
-        albums[i] = {
-            **album.dict(exclude={'tracks'}),
-            'tracks': paginate(
-                album.tracks,
-                0,
-                15,
-                URL('http://127.0.0.1:8000/api/v1/albums/{}/tracks?offset=0&limit=15'\
-                    .format(album.id))
-            )
-        }
-    return paginate(albums, offset, limit, request.url)
+    return await services.AlbumService.get_pages(offset, limit, request.url)
 
 
 @album_router.get('/{id}', response_model=schemas.AlbumOut, responses={
@@ -45,12 +33,12 @@ async def get_single_album(
     id: int = Path(..., gt=0, description='ID of album')
 ):
     album = await services.AlbumService.get_object_or_404(id=id)
-    tracks = paginate(
-        album.tracks,
+    tracks = await services.TrackService.get_pages(
         0,
         15,
         URL('http://127.0.0.1:8000/api/v1/albums/{}/tracks?offset=0&limit=15'\
-            .format(id))
+            .format(id)),
+        album__id=album.id
     )
     return {
         **album.dict(exclude={'tracks'}),
@@ -77,12 +65,13 @@ async def create_album(
 
 @album_router.patch(
     '/{id}',
-    response_model=schemas.AlbumOut,
+    status_code=204,
     responses={
-        200: {'description': 'An album'},
+        204: {'description': 'Album updated'},
         **token_responses,
         404: {'model': ExceptionMessage}
     },
+    response_class=Response
 )
 async def update_album(
     id: int = Path(..., gt=0, description='ID of album'),
@@ -91,7 +80,7 @@ async def update_album(
 ):
     album = await services.AlbumService.get_object_or_404(id=id)
     is_user_album_author(current_user, album)
-    return await services.AlbumService.update(schema, id=id)
+    await services.AlbumService.update(schema, id=id)
 
 
 @album_router.delete(
@@ -122,8 +111,12 @@ async def get_album_tracks(
     offset: int = Query(0, ge=0, le=100000),
     limit: int = Query(15, ge=0, le=50)
 ):
-    items = await services.TrackService.all(album=album_id)
-    return paginate(items, offset, limit, request.url)
+    return await services.TrackService.get_pages(
+        offset,
+        limit,
+        request.url,
+        album__id=album_id
+    )
 
 
 @album_router.post(

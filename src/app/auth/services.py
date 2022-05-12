@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import ormar
-from fastapi import BackgroundTasks, HTTPException, Request, Response
+from fastapi import BackgroundTasks, HTTPException
 
 from src.app.auth.tokens import (
     AccessToken,

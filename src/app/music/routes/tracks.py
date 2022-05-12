@@ -16,8 +16,11 @@ async def get_tracks(
     offset: int = Query(0, ge=0, le=100000),
     limit: int = Query(15, ge=0, le=50)
 ):
-    items = await services.TrackService.all()
-    return paginate(items, offset, limit, request)
+    return await services.TrackService.get_pages(
+        offset,
+        limit,
+        request.url
+    )
 
 
 @track_router.get('/{id}', response_model=schemas.TrackOut, responses={
