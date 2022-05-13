@@ -1,8 +1,12 @@
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from scripts.base import command_manager
+from scripts.base import CommandManager
+from scripts.runserver import runserver_manager
+from scripts.createsuperuser import createsuperuser_manager
 from src.config import settings
 from src.core.db import database
 from src.app.routers import app_router
@@ -44,5 +48,14 @@ app.include_router(app_router)
 
 
 if __name__ == '__main__':
-    args = command_manager.parse_args()
-    args.func(args)
+    command_manager = CommandManager()
+    command_manager.include_manager(runserver_manager)
+    command_manager.include_manager(createsuperuser_manager)
+
+    kwargs = vars(command_manager.parse_args())
+    command, func = kwargs.pop('command'), kwargs.pop('func')
+
+    if asyncio.iscoroutinefunction(func):
+        asyncio.run(func(**kwargs))
+    else:
+        func(**kwargs)

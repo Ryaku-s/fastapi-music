@@ -36,7 +36,21 @@ class CommandManager(ArgumentParser):
         allow_abbrev: bool = True,
         exit_on_error: bool = True
     ) -> None:
-        super().__init__(prog, usage, description, epilog, parents, formatter_class, prefix_chars, fromfile_prefix_chars, argument_default, conflict_handler, add_help, allow_abbrev, exit_on_error)
+        super().__init__(
+            prog,
+            usage,
+            description,
+            epilog,
+            parents,
+            formatter_class,
+            prefix_chars,
+            fromfile_prefix_chars,
+            argument_default,
+            conflict_handler,
+            add_help,
+            allow_abbrev,
+            exit_on_error
+        )
         self._commands = self.add_subparsers(
             title='commands',
             dest='command',
@@ -44,8 +58,13 @@ class CommandManager(ArgumentParser):
             required=True
         )
 
-    def add_command(self, name: str, arguments: Sequence[Argument], **kwargs) -> None:
-        def mount(command: Callable):
+    def add_command(
+        self,
+        name: str,
+        arguments: Sequence[Argument] = [],
+        **kwargs
+    ) -> Callable:
+        def decorator(command: Callable):
             command_parser = self._commands.add_parser(name, **kwargs)
 
             for argument in arguments:
@@ -58,7 +77,7 @@ class CommandManager(ArgumentParser):
 
             command_parser.set_defaults(func=command)
             return command
-        return mount
+        return decorator
 
-
-command_manager = CommandManager()
+    def include_manager(self, manager: 'CommandManager'):
+        self._commands.choices.update(manager._commands.choices)
