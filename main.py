@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from scripts.base import command_parser
+from scripts.base import command_manager
 from src.config import settings
 from src.core.db import database
 from src.app.routers import app_router
@@ -44,5 +44,5 @@ app.include_router(app_router)
 
 
 if __name__ == '__main__':
-    args = command_parser.parse_args()
+    args = command_manager.parse_args()
     args.func(args)
