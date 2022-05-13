@@ -74,6 +74,10 @@ class ModelService:
         )
 
     @classmethod
+    async def exists(cls, *args, **kwargs):
+        return await cls.repository.exists(*args, **kwargs)
+
+    @classmethod
     async def _pre_save(
         cls,
         schema: CreateSchema | UpdateSchema
