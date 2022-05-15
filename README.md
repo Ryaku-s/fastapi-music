@@ -3,7 +3,7 @@
 ## Описание
 REST API музыкального сервиса на FastAPI
 ### Стек технологий
-- Python 3
+- Python 3.10
 - FastAPI
 - SQLite
 # Начало работы
@@ -33,11 +33,15 @@ REST API музыкального сервиса на FastAPI
     MAIL_PORT=...
     MAIL_SERVER=...
     ```
-4) Создать суперпользователя
+4) Выполнить миграции
+    ```
+    alembic upgrade head
+    ```
+5) Создать суперпользователя
     ```
     python main.py createsuperuser
     ```
-5) Запуск сервера
+6) Запуск сервера
     ```
     python main.py runserver --reload
     ```
