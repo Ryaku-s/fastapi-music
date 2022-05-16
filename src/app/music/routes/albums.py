@@ -139,6 +139,7 @@ async def upload_track_to_album(
 
     is_user_album_author(current_user, album)
 
+    await services.AlbumService.is_available_to_upload(album)
     async with album.Meta.database.connection() as conn:
         async with conn.transaction():
             track = await services.TrackService.create(

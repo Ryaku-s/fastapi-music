@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Path, Query, Request, Response
 
 from src.app.base.paginator import paginate
-from src.app.base.schemas import ExceptionMessage, Message
+from src.app.base.schemas import Message
 from src.app.auth.permissions import get_current_active_user, token_responses
 from src.app.user.models import User
 from src.app.music import schemas, services
@@ -24,8 +24,12 @@ async def get_saved_tracks(
     limit: int = Query(15, ge=0, le=50),
     current_user: User = Depends(get_current_active_user)
 ):
-    items = await services.SavedTrackService.all(user=current_user)
-    return paginate(items, offset, limit, request)
+    return await services.SavedTrackService.get_pages(
+        offset,
+        limit,
+        request.url,
+        user=current_user
+    )
 
 
 @saved_router.put(
@@ -78,8 +82,12 @@ async def get_saved_albums(
     limit: int = Query(15, ge=0, le=50),
     current_user: User = Depends(get_current_active_user)
 ):
-    items = await services.SavedAlbumService.all(user=current_user)
-    return paginate(items, offset, limit, request)
+    return await services.SavedAlbumService.get_pages(
+        offset,
+        limit,
+        request.url,
+        user=current_user
+    )
 
 
 @saved_router.put(

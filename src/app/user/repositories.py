@@ -3,4 +3,4 @@ from src.app.user.models import User
 
 
 class UserRepository(ModelRepository):
-    model = User
+    _model = User

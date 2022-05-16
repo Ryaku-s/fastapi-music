@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 
 from src.app.music import models, schemas, services
 from src.app.auth.permissions import get_current_superuser, token_responses
-from src.app.base.schemas import ExceptionMessage
 
 
 genre_router = APIRouter(prefix='/genres', tags=['Genres'])

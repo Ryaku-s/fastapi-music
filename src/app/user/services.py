@@ -3,4 +3,4 @@ from src.app.user.repositories import UserRepository
 
 
 class UserService(ModelService):
-    repository = UserRepository
+    _repository = UserRepository

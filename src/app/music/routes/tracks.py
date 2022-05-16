@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Path, Query, Request
-from src.app.base.paginator import paginate
 
 from src.app.music import schemas, services
 from src.app.base.schemas import ExceptionMessage

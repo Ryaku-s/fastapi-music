@@ -14,15 +14,15 @@ UpdateSchema = TypeVar('UpdateSchema', bound=BaseModel)
 
 
 class ModelService:
-    repository: Type[ModelRepository]
+    _repository: Type[ModelRepository]
 
     @classmethod
     async def get(cls, **kwargs) -> Model:
-        return await cls.repository.get(**kwargs)
+        return await cls._repository.get(**kwargs)
 
     @classmethod
     async def all(cls, **kwargs) -> list[Model]:
-        return await cls.repository.all(**kwargs)
+        return await cls._repository.all(**kwargs)
 
     @classmethod
     async def get_pages(
@@ -32,22 +32,22 @@ class ModelService:
         url: URL,
         **kwargs
     ) -> ItemList:
-        items = await cls.repository.all(**kwargs)
+        items = await cls._repository.all(**kwargs)
         return paginate(items, offset, limit, url)
 
     @classmethod
     async def get_object_or_none(cls, **kwargs):
-        return await cls.repository.get_object_or_none(**kwargs)
+        return await cls._repository.get_object_or_none(**kwargs)
 
     @classmethod
     async def get_object_or_404(cls, **kwargs) -> Model:
-        obj = await cls.repository.get_object_or_none(**kwargs)
+        obj = await cls._repository.get_object_or_none(**kwargs)
 
         if not obj:
             raise HTTPException(
                 status_code=404,
                 detail='{} does not exist'.format(
-                    cls.repository.model.get_name(lower=False)
+                    cls._repository._model.get_name(lower=False)
                 )
             )
         return obj
@@ -61,21 +61,21 @@ class ModelService:
         if schema:
             schema_dict = await cls._pre_save(schema)
             kwargs.update(**schema_dict)
-        return await cls.repository.create(**kwargs)
+        return await cls._repository.create(**kwargs)
 
     @classmethod
     async def update(cls, schema: UpdateSchema, **kwargs) -> Model:
         obj: Model = await cls.get_object_or_404(**kwargs)
 
         schema_dict = await cls._pre_save(schema)
-        return await cls.repository.update(
+        return await cls._repository.update(
             obj,
             **schema_dict
         )
 
     @classmethod
     async def exists(cls, *args, **kwargs):
-        return await cls.repository.exists(*args, **kwargs)
+        return await cls._repository.exists(*args, **kwargs)
 
     @classmethod
     async def _pre_save(

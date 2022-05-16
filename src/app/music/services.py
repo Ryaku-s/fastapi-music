@@ -1,4 +1,5 @@
 from typing import Any
+from fastapi import HTTPException
 
 from ormar import Model
 from starlette.datastructures import URL
@@ -15,11 +16,20 @@ from src.app.base.uploads import (
     get_playlist_image_upload_path
 )
 from src.app.music import models, repositories
-from src.app.music.consts import ImageSize
+from src.app.music.consts import AlbumType, ImageSize
 
 
 class AlbumService(ModelService):
-    repository = repositories.AlbumRepository
+    _repository = repositories.AlbumRepository
+
+    @classmethod
+    async def is_available_to_upload(cls, album: models.Album) -> None:
+        if album.album_type == AlbumType.SINGLE and await TrackService\
+            .get_object_or_none(album=album):
+            raise HTTPException(
+                status_code=403,
+                detail='A single album can only have one track'
+            )
 
     @classmethod
     async def get_pages(cls, offset: int, limit: int, url: URL, **kwargs):
@@ -105,7 +115,7 @@ class AlbumService(ModelService):
 
 
 class TrackService(ModelService):
-    repository = repositories.TrackRepository
+    _repository = repositories.TrackRepository
 
     @classmethod
     async def _pre_save(
@@ -126,7 +136,7 @@ class TrackService(ModelService):
 
 
 class PlaylistService(ModelService):
-    repository = repositories.PlaylistRepository
+    _repository = repositories.PlaylistRepository
 
     @classmethod
     async def get_pages(cls, offset: int, limit: int, url: URL, **kwargs) -> ItemList:
@@ -211,40 +221,16 @@ class PlaylistService(ModelService):
 
 
 class SavedTrackService(ModelService):
-    model = models.SavedTrack
-
-    @classmethod
-    async def all(cls, **kwargs) -> list[Model]:
-        saved_tracks = await cls.model.objects.select_related([
-            'track',
-            'track__album',
-            'track__artist',
-            'track__album__genre',
-            'track__album__artist',
-            'track__album__images'
-        ]).all(**kwargs)
-        return [saved_track.track.dict() for saved_track in saved_tracks]
+    _repository = repositories.SavedTrackRepository
 
 
 class SavedAlbumService(ModelService):
-    model = models.SavedAlbum
-
-    @classmethod
-    async def all(cls, **kwargs) -> list[Model]:
-        saved_albums = await cls.model.objects.select_related([
-            'album',
-            'album__artist',
-            'album__genre',
-            'album__images',
-            'album__tracks',
-            'album__tracks__artist'
-        ]).all(**kwargs)
-        return [saved_album.album.dict() for saved_album in saved_albums]
+    _repository = repositories.SavedAlbumRepository
 
 
 class GenreService(ModelService):
-    repository = repositories.GenreRepository
+    _repository = repositories.GenreRepository
 
 
 class ImageService(ModelService):
-    repository = repositories.ImageRepository
+    _repository = repositories.ImageRepository
