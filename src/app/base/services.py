@@ -74,6 +74,10 @@ class ModelService:
         )
 
     @classmethod
+    async def delete(cls, **kwargs) -> None:
+        await cls._repository.delete(**kwargs)
+
+    @classmethod
     async def exists(cls, *args, **kwargs):
         return await cls._repository.exists(*args, **kwargs)
 
