@@ -38,8 +38,12 @@ class PasswordResetToken(Token):
     token: str
 
 
-class PasswordRecovery(BaseModel):
+class Email(BaseModel):
     email: EmailStr
+
+
+class PasswordRecovery(Email):
+    pass
 
 
 class PasswordReset(PasswordResetToken):

@@ -85,26 +85,23 @@ async def confirm_email(schema: schemas.EmailConfirmationToken):
     await services.confirm_user_email(schema.token)
 
 
-# TODO
-# Do a resend email
-# 
-# @auth_router.post(
-#     '/email',
-#     status_code=204,
-#     responses= {
-#         204: {
-#             'description': 'Email confirmation has been sent'
-#         },
-#         403: {
-#             'model': ExceptionMessage,
-#             'description': 'Bad request or user doesn\'t have enough '
-#                 'privileges'
-#         }
-#     },
-#     response_class=Response
-# )
-# async def resend_email_confirmation():
-#     pass
+@auth_router.post(
+    '/email/confirmation',
+    status_code=204,
+    responses= {
+        204: {
+            'description': 'Email confirmation has been sent'
+        },
+        403: {
+            'model': ExceptionMessage,
+            'description': 'Bad request or user doesn\'t have enough '
+                'privileges or email already confirmed'
+        }
+    },
+    response_class=Response
+)
+async def resend_email_confirmation(schema: schemas.Email, task: BackgroundTasks):
+    return await services.resend_user_email_confirmation(schema, task)
 
 
 @auth_router.post(
@@ -158,11 +155,11 @@ async def change_password(
             'description': 'Password reset mail has been sent'
         },
         404: {'model': ExceptionMessage}
-    }
+    },
+    response_class=Response
 )
 async def recover_password(
     schema: schemas.PasswordRecovery,
     task: BackgroundTasks
 ):
     await services.recover_user_password(schema.email, task)
-    return Message(msg='Password reset mail has been sent')

@@ -1,8 +1,11 @@
 from datetime import datetime
+import email
 
 import ormar
 from fastapi import BackgroundTasks, HTTPException
 
+from src.config import settings
+from src.core.security import get_password_hash, verify_password
 from src.app.auth.tokens import (
     AccessToken,
     EmailConfirmationToken,
@@ -12,9 +15,7 @@ from src.app.auth.tokens import (
 from src.app.user.models import User
 from src.app.user.services import UserService
 from src.app.auth.jwt import generate_refresh_token
-from src.config import settings
-from src.core.security import get_password_hash, verify_password
-from src.app.auth.schemas import PasswordChange, UserCreate, UserLogin
+from src.app.auth.schemas import Email, PasswordChange, UserCreate, UserLogin
 from src.utils.email import send_email_confirmation, send_password_reset
 
 
@@ -37,6 +38,23 @@ async def register_user(user: UserCreate, task: BackgroundTasks) -> None:
     task.add_task(
         send_email_confirmation, user_db
     )
+
+
+async def resend_user_email_confirmation(
+    schema: Email,
+    task: BackgroundTasks
+) -> None:
+    user: User = await UserService.get_object_or_404(email=schema.email)
+
+    if not user.email_confirmed:
+        task.add_task(
+            send_email_confirmation, user
+        )
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail='User email already confirmed'
+        )
 
 
 async def confirm_user_email(token: str):
