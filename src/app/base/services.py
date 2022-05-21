@@ -78,8 +78,12 @@ class ModelService:
         await cls._repository.delete(**kwargs)
 
     @classmethod
-    async def exists(cls, *args, **kwargs):
+    async def exists(cls, *args, **kwargs) -> bool:
         return await cls._repository.exists(*args, **kwargs)
+
+    @classmethod
+    async def get_or_create(cls, **kwargs) -> Model:
+        return await cls._repository.get_or_create(**kwargs)
 
     @classmethod
     async def _pre_save(

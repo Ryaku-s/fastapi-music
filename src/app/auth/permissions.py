@@ -1,7 +1,10 @@
 from jose import JWTError
 from fastapi import HTTPException, Security, status
 
-from src.app.auth.http import HTTPBearerAuthorization, HTTPAuthorizationCredentials
+from src.app.auth.http import (
+    HTTPBearerAuthorization,
+    HTTPAuthorizationCredentials
+)
 from src.app.auth.tokens import AccessToken
 from src.app.base.schemas import ExceptionMessage
 from src.app.user.services import UserService

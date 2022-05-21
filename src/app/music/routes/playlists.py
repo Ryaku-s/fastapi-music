@@ -106,7 +106,7 @@ async def delete_playlist(
         200: {'description': 'Pages of tracks'}
     }
 )
-async def get_album_tracks(
+async def get_playlist_tracks(
     request: Request,
     playlist_id: int = Path(..., gt=0),
     offset: int = Query(0, ge=0, le=100000),
@@ -118,7 +118,7 @@ async def get_album_tracks(
 
 @playlist_router.put(
     '/{playlist_id}/tracks',
-    response_model=schemas.PlaylistOut,
+    status_code=204,
     responses={
         204: {
             'description': 'Tracks added to playlist successfully'

@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Path, Query, Request, Response
 
-from src.app.base.paginator import paginate
 from src.app.base.schemas import Message
 from src.app.auth.permissions import get_current_active_user, token_responses
 from src.app.user.models import User
@@ -34,12 +33,16 @@ async def get_saved_tracks(
 
 @saved_router.put(
     '/tracks',
-    response_model=Message,
     tags=['Tracks'],
-    responses=token_responses
+    status_code=204,
+    responses={
+        204: {'description': 'Track saved successfully'},
+        **token_responses
+    },
+    response_class=Response
 )
 async def save_track(
-    schema: schemas.TrackSave,
+    schema: schemas.TrackId,
     current_user: User = Depends(get_current_active_user)
 ):
     track = await services.TrackService.get_object_or_404(id=schema.id)
@@ -47,23 +50,22 @@ async def save_track(
         track=track,
         user=current_user
     )
-    return Message(msg='Track saved successfully')
 
 
 @saved_router.delete(
-    '/tracks/{id}',
+    '/tracks',
     status_code=204,
     tags=['Tracks'],
-    response_class=Response,
-    responses=token_responses
+    responses=token_responses,
+    response_class=Response
 )
 async def remove_saved_track(
-    id: int = Path(..., gt=0, description='ID of track'),
+    schema: schemas.TrackId,
     current_user: User = Depends(get_current_active_user)
 ):
     await services.SavedTrackService.delete(
         user=current_user.id,
-        track=id
+        track=schema.id
     )
 
 
@@ -92,12 +94,16 @@ async def get_saved_albums(
 
 @saved_router.put(
     '/albums',
-    response_model=Message,
     tags=['Albums'],
-    responses=token_responses
+    status_code=204,
+    responses={
+        204: {'description': 'Album saved successfully'},
+        **token_responses
+    },
+    response_class=Response
 )
 async def save_album(
-    schema: schemas.AlbumSave,
+    schema: schemas.AlbumId,
     current_user: User = Depends(get_current_active_user)
 ):
     album = await services.AlbumService.get_object_or_404(id=schema.id)
@@ -105,21 +111,76 @@ async def save_album(
         album=album,
         user=current_user
     )
-    return Message(msg='Album saved successfully')
 
 
 @saved_router.delete(
-    '/albums/{id}',
+    '/albums',
     status_code=204,
     tags=['Albums'],
-    response_class=Response,
-    responses=token_responses
+    responses=token_responses,
+    response_class=Response
 )
 async def remove_saved_album(
-    id: int = Path(..., gt=0, description='ID of album'),
+    schema: schemas.AlbumId,
     current_user: User = Depends(get_current_active_user)
 ):
     await services.SavedAlbumService.delete(
         user=current_user.id,
-        album=id
+        album=schema.id
+    )
+
+
+@saved_router.get(
+    '/playlists',
+    tags=['Playlists']
+)
+async def get_saved_playlsits(
+    request: Request,
+    offset: int = Query(0, ge=0, le=100000),
+    limit: int = Query(15, ge=0, le=50),
+    current_user: User = Depends(get_current_active_user)
+):
+    return await services.SavedPlaylistService.get_pages(
+        offset,
+        limit,
+        request.url,
+        user=current_user
+    )
+
+
+@saved_router.put(
+    '/playlists',
+    response_model=Message,
+    tags=['Playlists'],
+    responses={
+        200: {'description': 'Playlist saved successfully'},
+        **token_responses
+    },
+    response_class=Response
+)
+async def save_playlist(
+    schema: schemas.PlaylistId,
+    current_user: User = Depends(get_current_active_user)
+):
+    playlist = await services.PlaylistService.get_object_or_404(id=schema.id)
+    await services.SavedPlaylistService.get_or_create(
+        playlist=playlist,
+        user=current_user
+    )
+
+
+@saved_router.delete(
+    '/playlists',
+    status_code=204,
+    tags=['Playlists'],
+    responses=token_responses,
+    response_class=Response
+)
+async def remove_saved_playlist(
+    schema: schemas.PlaylistId,
+    current_user: User = Depends(get_current_active_user)
+):
+    await services.SavedAlbumService.delete(
+        user=current_user.id,
+        album=schema.id
     )

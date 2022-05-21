@@ -60,6 +60,9 @@ class PlaylistRepository(ModelRepository):
             'artists',
             'tracks',
             'tracks__artist',
+            'tracks__album',
+            'tracks__album__artist',
+            'tracks__album__genre',
             'images'
         ]).all(**kwargs)
 
@@ -70,6 +73,8 @@ class PlaylistRepository(ModelRepository):
             'artists',
             'tracks',
             'tracks__artist',
+            'tracks__album__artist',
+            'tracks__album__genre',
             'images'
         ]).get_or_none(**kwargs)
 
@@ -112,3 +117,19 @@ class SavedAlbumRepository(ModelRepository):
             'album__tracks__artist'
         ]).all(**kwargs)
         return [saved_album.album.dict() for saved_album in saved_albums]
+
+
+class SavedPlaylistRepository(ModelRepository):
+    _model = models.SavedPlaylist
+
+    @classmethod
+    async def all(cls, **kwargs) -> list[Model]:
+        saved_playlists = await cls._model.objects.select_related([
+            'playlist',
+            'playlist__author',
+            'playlist__artists',
+            'playlist__tracks',
+            'playlist__tracks__artist',
+            'playlist__images'
+        ]).all(**kwargs)
+        return [saved_playlist.dict() for saved_playlist in saved_playlists]

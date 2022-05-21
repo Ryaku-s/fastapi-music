@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, Path, Response
 from src.app.music import models, schemas, services
 from src.app.auth.permissions import get_current_superuser, token_responses
 
-
 genre_router = APIRouter(prefix='/genres', tags=['Genres'])
 
 

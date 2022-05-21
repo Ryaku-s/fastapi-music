@@ -129,12 +129,16 @@ class PlaylistAddTrack(BaseModel):
     tracks: list[int] = Body(..., description='IDs of tracks')
 
 
-class TrackSave(BaseModel):
+class TrackId(BaseModel):
     id: int = Body(..., description='ID of track')
 
 
-class AlbumSave(BaseModel):
+class AlbumId(BaseModel):
     id: int = Body(..., description='ID of album')
+
+
+class PlaylistId(BaseModel):
+    id: int = Body(..., description='ID of playlist')
 
 
 AlbumCreateForm = model_form_factory(AlbumCreate)

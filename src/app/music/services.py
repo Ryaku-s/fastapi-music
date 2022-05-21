@@ -140,7 +140,7 @@ class PlaylistService(ModelService):
 
     @classmethod
     async def get_pages(cls, offset: int, limit: int, url: URL, **kwargs) -> ItemList:
-        playlists = await PlaylistService.all(**kwargs)
+        playlists = await cls._repository.all(**kwargs)
         for i, playlist in enumerate(playlists):
             playlists[i] = {
                 **playlist.dict(exclude={'tracks', 'artists'}),
@@ -157,21 +157,21 @@ class PlaylistService(ModelService):
 
     @classmethod
     async def create(cls, schema: CreateSchema | None = None, **kwargs) -> Model:
+        upload_path = get_playlist_image_upload_path()
+        small_image_path = upload_image(
+            upload_path,
+            schema.image,
+            (100, 100)
+        )
+        normal_image_path = upload_image(
+            upload_path,
+            schema.image,
+            (450, 450)
+        )
+
         async with database.connection() as conn:
             async with conn.transaction():
                 playlist: models.Playlist = await super().create(schema, **kwargs)
-
-                upload_path = get_playlist_image_upload_path()
-                small_image_path = upload_image(
-                    upload_path,
-                    schema.image,
-                    (100, 100)
-                )
-                normal_image_path = upload_image(
-                    upload_path,
-                    schema.image,
-                    (450, 450)
-                )
 
                 small_image_obj = await ImageService.create(
                     url=small_image_path,
@@ -226,6 +226,10 @@ class SavedTrackService(ModelService):
 
 class SavedAlbumService(ModelService):
     _repository = repositories.SavedAlbumRepository
+
+
+class SavedPlaylistService(ModelService):
+    _repository = repositories.SavedPlaylistRepository
 
 
 class GenreService(ModelService):
