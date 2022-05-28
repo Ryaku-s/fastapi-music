@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Path, Response
 
+from src.app.base.schemas import ExceptionMessage
 from src.app.music import models, schemas, services
 from src.app.auth.permissions import get_current_superuser, token_responses
 
@@ -31,7 +32,10 @@ async def create_genre(schema: schemas.Genre):
     status_code=201,
     response_model=models.Genre,
     dependencies=[Depends(get_current_superuser)],
-    responses=token_responses
+    responses={
+        404: {'model': ExceptionMessage},
+        **token_responses
+    }
 )
 async def update_genre(
     schema: schemas.Genre,
@@ -45,7 +49,10 @@ async def update_genre(
     status_code=201,
     response_model=models.Genre,
     dependencies=[Depends(get_current_superuser)],
-    responses=token_responses,
+    responses={
+        404: {'model': ExceptionMessage},
+        **token_responses
+    },
     response_class=Response
 )
 async def delete_genre(

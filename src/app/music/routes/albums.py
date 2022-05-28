@@ -87,7 +87,10 @@ async def update_album(
     '/{id}',
     status_code=204,
     response_class=Response,
-    responses=token_responses
+    responses={
+        **token_responses,
+        404: {'model': ExceptionMessage}
+    }
 )
 async def delete_album(
     id: int = Path(..., gt=0, description='ID of album'),
@@ -102,7 +105,8 @@ async def delete_album(
     '/{album_id}/tracks',
     response_model=schemas.TrackList,
     responses={
-        200: {'description': 'Pages of tracks'}
+        200: {'description': 'Pages of tracks'},
+        404: {'model': ExceptionMessage}
     }
 )
 async def get_album_tracks(
@@ -111,11 +115,12 @@ async def get_album_tracks(
     offset: int = Query(0, ge=0, le=100000),
     limit: int = Query(15, ge=0, le=50)
 ):
+    album = await services.AlbumService.get_object_or_404(id=album_id)
     return await services.TrackService.get_pages(
         offset,
         limit,
         request.url,
-        album__id=album_id
+        album=album
     )
 
 
@@ -125,6 +130,7 @@ async def get_album_tracks(
     response_model=schemas.TrackOut,
     responses={
         201: {'description': 'A track'},
+        404: {'model': ExceptionMessage},
         **token_responses
     }
 )

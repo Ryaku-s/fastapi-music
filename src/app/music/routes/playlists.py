@@ -66,6 +66,7 @@ async def create_playlist(
 
 @playlist_router.patch('/{id}', response_model=schemas.PlaylistOut, responses={
     200: {'description': 'A playlist'},
+    404: {'model': ExceptionMessage},
     **token_responses
 })
 async def update_playlist(
@@ -88,7 +89,10 @@ async def update_playlist(
     '/{id}',
     status_code=204,
     response_class=Response,
-    responses=token_responses
+    responses={
+        404: {'model': ExceptionMessage},
+        **token_responses
+    }
 )
 async def delete_playlist(
     id: int = Path(..., gt=0, description='ID of album'),
@@ -103,7 +107,8 @@ async def delete_playlist(
     '/{playlist_id}/tracks',
     response_model=schemas.TrackList,
     responses={
-        200: {'description': 'Pages of tracks'}
+        200: {'description': 'Pages of tracks'},
+        404: {'model': ExceptionMessage}
     }
 )
 async def get_playlist_tracks(
@@ -123,6 +128,7 @@ async def get_playlist_tracks(
         204: {
             'description': 'Tracks added to playlist successfully'
         },
+        404: {'model': ExceptionMessage},
         **token_responses
     },
     response_class=Response
@@ -155,7 +161,10 @@ async def add_tracks_to_playlist(
     '/{playlist_id}/tracks',
     status_code=204,
     response_class=Response,
-    responses=token_responses
+    responses={
+        404: {'model': ExceptionMessage},
+        **token_responses
+    }
 )
 async def remove_playlist_tracks(
     schema: schemas.PlaylistAddTrack,
